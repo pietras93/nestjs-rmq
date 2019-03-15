@@ -76,7 +76,7 @@ Additionally, you can use optional parameters:
 -   **logMessages** (boolean) - Enable printing all sent and recieved messages in console with its route and content. Default is false.
 -   **logger** (LoggerService) - Your custom logger service that implements `LoggerService` interface. Compatible with Winston and other loggers.
 -   **middleware** (array) - Array of middleware functions that extends `RMQPipeClass` with one method `transform`. They will be triggered right after recieving message, before pipes and controller method. Trigger order is equal to array order.
--   **errorHandler** (class) - custom error handler for dealing with errors from replies, use `errorHandler` in module options and pass  class that extends `RMQErrorHandler`.
+-   **errorHandler** (class) - custom error handler for dealing with errors from replies, use `errorHandler` in module options and pass class that extends `RMQErrorHandler`.
 -   **serviceName** (string) - service name for debugging.
 
 ```javascript
@@ -137,29 +137,30 @@ import { ConfigService } from './config/config.service';
 @Module({
 	imports: [
 		RMQModule.forRootAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => {
-                return {
-                    exchangeName: 'test',
-                    connections: [
-                        {
-                            login: 'guest',
-                            password: 'guest',
-                            host: configService.getHost(),
-                        },
-                    ],
-                    queueName: 'test',
-                }
-            }
-        }),
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: (configService: ConfigService) => {
+				return {
+					exchangeName: 'test',
+					connections: [
+						{
+							login: 'guest',
+							password: 'guest',
+							host: configService.getHost(),
+						},
+					],
+					queueName: 'test',
+				};
+			},
+		}),
 	],
 })
 export class AppModule {}
 ```
-- **useFactory** - returns `IRMQServiceOptions`.
-- **imports** - additional modules for configuration.
-- **inject** - additional services for usage inside useFactory.
+
+-   **useFactory** - returns `IRMQServiceOptions`.
+-   **imports** - additional modules for configuration.
+-   **inject** - additional services for usage inside useFactory.
 
 ## Sending messages
 
@@ -193,6 +194,7 @@ this.rmqService.send<number[], number>('sum.rpc', [1, 2, 3])
         //...
     });
 ```
+
 Also you can use send options:
 
 ```javascript
@@ -203,6 +205,7 @@ this.rmqService.send<number[], number>('sum.rpc', [1, 2, 3], {
     timeout: 30000
 })
 ```
+
 -   **expiration** - if supplied, the message will be discarded from a queue once it’s been there longer than the given number of milliseconds.
 -   **priority** - a priority for the message.
 -   **persistent** - if truthy, the message will survive broker restarts provided it’s in a queue that also survives restarts.
@@ -243,7 +246,7 @@ export class AppController {
 Return value will be send back as a reply in RPC topic. In 'sum.rpc' example it will send sum of array values. And sender will get `6`:
 
 ```javascript
-this.rmqService.send('sum.rpc', [1, 2, 3]).then(reply => {
+this.rmqService.send('sum.rpc', [1, 2, 3]).then((reply) => {
 	// reply: 6
 });
 ```
@@ -272,7 +275,7 @@ The default msgFactory:
 })
 ```
 
-Custom msgFactory using @Payload and @Context decorators: 
+Custom msgFactory using @Payload and @Context decorators:
 
 ```javascript
 @RMQCOntroller({
@@ -291,7 +294,6 @@ Custom msgFactory using @Payload and @Context decorators:
   };
 })
 ```
-
 
 ## Validating data
 
@@ -350,7 +352,8 @@ class MyPipeClass extends RMQPipeClass {
 ```
 
 ## Using RMQErrorHandler
-If you want to use custom error handler for dealing with errors from replies, use `errorHandler` in module options and pass  class that extends `RMQErrorHandler`:
+
+If you want to use custom error handler for dealing with errors from replies, use `errorHandler` in module options and pass class that extends `RMQErrorHandler`:
 
 ```javascript
 class MyErrorHandler extends RMQErrorHandler {
@@ -372,10 +375,8 @@ class MyErrorHandler extends RMQErrorHandler {
 
 RQMService provides additional method to check if you are still connected to RMQ. Although reconnection is automatic, you can provide wrong credentials and reconnection will not help. So to check connection for Docker healthCheck use:
 
-``` javascript
-
+```javascript
 const isConnected = this.rmqService.healthCheck();
-
 ```
 
 If `isConnected` equals `true`, you are successfully connected.
@@ -385,12 +386,17 @@ If `isConnected` equals `true`, you are successfully connected.
 If you want to close connection, for example, if you are using RMQ in testing tools, use `disconnect()` method;
 
 ## Running test
+
 For e2e tests you need to install Docker in your machine and start RabbitMQ docker image with `docker-compose.yml` in `e2e` folder:
+
 ```
 docker-compose up -d
 ```
+
 Then run tests with
+
 ```
 npm run test
 ```
+
 ![alt cover](https://github.com/AlariCode/nestjs-rmq/raw/master/img/tests.png)
