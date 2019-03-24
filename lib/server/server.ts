@@ -13,6 +13,7 @@ import {
     DISCONNECT_MESSAGE,
 } from '../constants';
 import * as amqp from 'amqp-connection-manager';
+import { hostname } from 'os';
 
 export class ServerRMQ extends Server implements CustomTransportStrategy {
     private server: any = null;
@@ -76,6 +77,10 @@ export class ServerRMQ extends Server implements CustomTransportStrategy {
     }
 
     private sendMessage(message, replyTo, correlationId): void {
+        const hosts = [hostname()];
+        if (message.response) {
+            message.response.hosts = message.response.hosts ? message.response.hosts.concat(hosts) : hosts;
+        }
         const buffer = Buffer.from(JSON.stringify(message));
         this.channel.sendToQueue(replyTo, buffer, { correlationId });
     }

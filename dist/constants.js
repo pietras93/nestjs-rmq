@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DEFAULT_URL = 'amqp://localhost';
+exports.DEFAULT_QUEUE = 'default';
+exports.DEFAULT_PREFETCH_COUNT = 0;
+exports.DEFAULT_IS_GLOBAL_PREFETCH_COUNT = false;
+exports.DEFAULT_QUEUE_OPTIONS = {};
+exports.CONNECT_EVENT = 'connect';
+exports.DISCONNECT_EVENT = 'disconnect';
+exports.DISCONNECT_MESSAGE = 'Disconnected from RMQ. Trying to reconnect';
