@@ -165,7 +165,11 @@ export class RMQService {
 					msg = await this.useMiddleware(msg);
 					requestEmitter.emit(msg.fields.routingKey, msg);
 				} else {
-					this.reply('', msg, new RMQError(ERROR_NO_ROUTE, ERROR_TYPE.TRANSPORT));
+					this.reply(
+						'',
+						msg,
+						new RMQError(`${ERROR_NO_ROUTE}: ${msg.fields.routingKey}`, ERROR_TYPE.TRANSPORT)
+					);
 				}
 			},
 			{ noAck: false }
