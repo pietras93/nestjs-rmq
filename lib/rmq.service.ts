@@ -14,6 +14,7 @@ import {
 	EXCHANGE_TYPE,
 	REPLY_QUEUE,
 	RMQ_ROUTES_META,
+	DEFAULT_HEARTBEAT_TIME,
 } from './constants';
 import { EventEmitter } from 'events';
 import { Channel, Message } from 'amqplib';
@@ -39,6 +40,7 @@ export class RMQService {
 	private replyQueue: string = REPLY_QUEUE;
 	private queueMeta: IQueueMeta[];
 	private logger: LoggerService;
+	private isConnected: boolean = false;
 
 	constructor(options: IRMQServiceOptions) {
 		this.options = options;
@@ -52,6 +54,7 @@ export class RMQService {
 			});
 			const connectionOptions = {
 				reconnectTimeInSeconds: this.options.reconnectTimeInSeconds ?? DEFAULT_RECONNECT_TIME,
+				heartbeatIntervalInSeconds: this.options.heartbeatIntervalInSeconds ?? DEFAULT_HEARTBEAT_TIME
 			};
 			this.server = amqp.connect(connectionURLs, connectionOptions);
 			this.channel = this.server.createChannel({
@@ -81,9 +84,11 @@ export class RMQService {
 				},
 			});
 			this.server.on(CONNECT_EVENT, (connection) => {
+				this.isConnected = true;
 				this.attachEmmitters();
 			});
 			this.server.on(DISCONNECT_EVENT, (err) => {
+				this.isConnected = false;
 				this.detachEmitters();
 				this.logger.error(DISCONNECT_MESSAGE);
 				this.logger.error(err.err);
@@ -129,6 +134,10 @@ export class RMQService {
 		this.logger.debug(`[${topic}] ${JSON.stringify(message)}`);
 	}
 
+	public healthCheck() {
+		return this.isConnected;
+	}
+
 	public async disconnect() {
 		this.detachEmitters();
 		this.sendResponseEmitter.removeAllListeners();
@@ -156,7 +165,11 @@ export class RMQService {
 					msg = await this.useMiddleware(msg);
 					requestEmitter.emit(msg.fields.routingKey, msg);
 				} else {
-					this.reply('', msg, new RMQError(ERROR_NO_ROUTE, ERROR_TYPE.TRANSPORT));
+					this.reply(
+						'',
+						msg,
+						new RMQError(`${ERROR_NO_ROUTE}: ${msg.fields.routingKey}`, ERROR_TYPE.TRANSPORT)
+					);
 				}
 			},
 			{ noAck: false }

@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { RMQModule, RMQService } from '../../lib';
-import { INestApplication, Logger } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { ApiController } from '../mocks/api.controller';
 import { MicroserviceController } from '../mocks/microservice.controller';
 import { ERROR_UNDEFINED_FROM_RPC } from '../../lib/constants';
@@ -13,7 +13,6 @@ describe('RMQe2e', () => {
 	let apiController: ApiController;
 	let microserviceController: MicroserviceController;
 	let rmqService: RMQService;
-	let spyNotificationNone;
 
 	beforeAll(async () => {
 		const apiModule = await Test.createTestingModule({
@@ -28,11 +27,13 @@ describe('RMQe2e', () => {
 						},
 					],
 					queueName: 'test',
+					heartbeatIntervalInSeconds: 10,
 					prefetchCount: 10,
 					middleware: [DoublePipe],
 					intercepters: [ZeroIntercepter],
 					errorHandler: ErrorHostHandler,
 					serviceName: 'test-service',
+					messagesTimeout: 2000,
 				}),
 			],
 			controllers: [ApiController, MicroserviceController],
@@ -43,12 +44,15 @@ describe('RMQe2e', () => {
 		apiController = apiModule.get<ApiController>(ApiController);
 		microserviceController = apiModule.get<MicroserviceController>(MicroserviceController);
 		rmqService = apiModule.get<RMQService>(RMQService);
-		spyNotificationNone = jest.spyOn(microserviceController, 'notificationNone');
 		console.warn = jest.fn();
 		console.log = jest.fn();
 	});
 
 	describe('rpc', () => {
+		it('check connection', async () => {
+			const isConnected = rmqService.healthCheck();
+			expect(isConnected).toBe(true);
+		});
 		it('successful send()', async () => {
 			const { result } = await apiController.sumSuccess([1, 2, 3]);
 			expect(result).toBe(6);
@@ -105,6 +109,15 @@ describe('RMQe2e', () => {
 				expect(error.host).not.toBeNull();
 			}
 		});
+		it('long message timeout', async () => {
+			try {
+				const num = await apiController.timeOutMessage(10);
+				expect(num).toBe(10);
+			} catch(e) {
+				expect(e.message).toBeNull();
+			}
+		});
+
 	});
 
 	describe('none', () => {
@@ -153,7 +166,7 @@ describe('RMQe2e', () => {
 	});
 });
 
-function delay(time: number) {
+async function delay(time: number) {
 	return new Promise((resolve) => {
 		setTimeout(() => {
 			resolve();

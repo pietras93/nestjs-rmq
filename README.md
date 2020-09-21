@@ -68,6 +68,7 @@ Additionally, you can use optional parameters:
 -   **prefetchCount** (boolean) - You can read more [here](https://github.com/postwait/node-amqp).
 -   **isGlobalPrefetchCount** (boolean) - You can read more [here](https://github.com/postwait/node-amqp).
 -   **reconnectTimeInSeconds** (number) - Time in seconds before reconnection retry. Default is 5 seconds.
+-   **heartbeatIntervalInSeconds** (number) - Interval to send heartbeats to broker. Defaults to 5 seconds.
 -   **queueArguments** (object) - You can read more about queue parameters [here](https://www.rabbitmq.com/parameters.html).
 -   **messagesTimeout** (number) - Number of milliseconds 'post' method will wait for the response before a timeout error. Default is 30 000.
 -   **isQueueDurable** (boolean) - Makes created queue durable. Default is true.
@@ -123,6 +124,42 @@ import { RMQModule } from 'nestjs-tests';
 })
 export class AppModule {}
 ```
+
+## Async initialization
+
+If you want to inject dependency into RMQ initialization like Configuration service, use `forRootAsync`:
+
+```javascript
+import { RMQModule } from 'nestjs-tests';
+import { ConfigModule } from './config/config.module';
+import { ConfigService } from './config/config.service';
+
+@Module({
+	imports: [
+		RMQModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => {
+                return {
+                    exchangeName: 'test',
+                    connections: [
+                        {
+                            login: 'guest',
+                            password: 'guest',
+                            host: configService.getHost(),
+                        },
+                    ],
+                    queueName: 'test',
+                }
+            }
+        }),
+	],
+})
+export class AppModule {}
+```
+- **useFactory** - returns `IRMQServiceOptions`.
+- **imports** - additional modules for configuration.
+- **inject** - additional services for usage inside useFactory.
 
 ## Sending messages
 
@@ -330,6 +367,18 @@ class MyErrorHandler extends RMQErrorHandler {
     }
 }
 ```
+
+## HealthCheck
+
+RQMService provides additional method to check if you are still connected to RMQ. Although reconnection is automatic, you can provide wrong credentials and reconnection will not help. So to check connection for Docker healthCheck use:
+
+``` javascript
+
+const isConnected = this.rmqService.healthCheck();
+
+```
+
+If `isConnected` equals `true`, you are successfully connected.
 
 ## Disconnecting
 

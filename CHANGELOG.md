@@ -1,5 +1,14 @@
 # Change log
 
+## 1.12.0
+-  Added healthCheck method 
+
+## 1.11.0
+-   Added forRootAsync method
+
+## 1.10.1
+-   Added heartbeat option.
+
 ## 1.9.0
 -   Custom message factory inside controller decorator (thx to mjarmoc)
 
