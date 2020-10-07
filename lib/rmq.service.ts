@@ -54,7 +54,7 @@ export class RMQService {
 			});
 			const connectionOptions = {
 				reconnectTimeInSeconds: this.options.reconnectTimeInSeconds ?? DEFAULT_RECONNECT_TIME,
-				heartbeatIntervalInSeconds: this.options.heartbeatIntervalInSeconds ?? DEFAULT_HEARTBEAT_TIME
+				heartbeatIntervalInSeconds: this.options.heartbeatIntervalInSeconds ?? DEFAULT_HEARTBEAT_TIME,
 			};
 			this.server = amqp.connect(connectionURLs, connectionOptions);
 			this.channel = this.server.createChannel({

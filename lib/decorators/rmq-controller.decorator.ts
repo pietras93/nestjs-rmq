@@ -25,6 +25,9 @@ export function RMQController(options?: IRMQControllerOptions): ClassDecorator {
 				topics.forEach(async (topic) => {
 					requestEmitter.on(topic.topic, async (msg: Message) => {
 						try {
+							if (topic.ackBefore) {
+								responseEmitter.emit(ResponseEmmiterResult.ack, msg);
+							}
 							const result = await this[topic.methodName].apply(
 								this,
 								options?.msgFactory ? options.msgFactory(msg, topic) : RMQMessageFactory(msg, topic)
@@ -37,7 +40,7 @@ export function RMQController(options?: IRMQControllerOptions): ClassDecorator {
 									msg,
 									new RMQError(ERROR_UNDEFINED_FROM_RPC, ERROR_TYPE.RMQ)
 								);
-							} else {
+							} else if (!topic.ackBefore) {
 								responseEmitter.emit(ResponseEmmiterResult.ack, msg);
 							}
 						} catch (err) {
