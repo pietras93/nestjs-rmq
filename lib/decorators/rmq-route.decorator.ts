@@ -2,7 +2,7 @@ import { RMQ_ROUTES_META } from '../constants';
 import { IQueueMeta } from '../interfaces/queue-meta.interface';
 import { RMQService } from '../rmq.service';
 
-export const RMQRoute = (topic: string, ackBefore: boolean = false, unbind?: boolean) => {
+export const RMQRoute = (topic: string, ackBefore: boolean = false, unbind: boolean = false) => {
 	return (target: any, methodName: string, descriptor: PropertyDescriptor) => {
 		let routes: IQueueMeta[] = Reflect.getMetadata(RMQ_ROUTES_META, RMQService);
 		if (!routes) {
