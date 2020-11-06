@@ -19,7 +19,9 @@ export function RMQController(options?: IRMQControllerOptions): ClassDecorator {
 		if (topics.length === 0) {
 			Logger.error(`${ERROR_NO_ROUTE_FOR_CONTROLLER} ${target.prototype.constructor.name}`);
 		}
-		target = class extends (target as { new (...args): any }) {
+		const originalName = target.name;
+		const holder = {};
+		holder[originalName] = class extends (target as { new (...args): any }) {
 			constructor(...args: any) {
 				super(...args);
 				topics.forEach(async (topic) => {
@@ -54,6 +56,6 @@ export function RMQController(options?: IRMQControllerOptions): ClassDecorator {
 				});
 			}
 		};
-		return target;
+		return holder[originalName];
 	};
 }
