@@ -154,7 +154,11 @@ export class RMQService {
 		this.queueMeta = this.queueMeta ?? [];
 		if (this.queueMeta.length > 0) {
 			this.queueMeta.map(async (meta) => {
-				await channel.bindQueue(this.options.queueName, this.options.exchangeName, meta.topic);
+				if (meta.unbind) {
+					await channel.unbindQueue(this.options.queueName, this.options.exchangeName, meta.topic);
+				} else {
+					await channel.bindQueue(this.options.queueName, this.options.exchangeName, meta.topic);
+				}
 			});
 		}
 		await channel.consume(
